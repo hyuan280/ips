@@ -204,6 +204,63 @@ sudo ./ufw_sync-ip.sh               # root 权限操作 ufw
 - 中心查询接口返回的是"该服务器最近一段时间看到过的 IP"，配合
   `start`/`end` 参数即可限定时间窗口（脚本用 `start`=N 天前，`end` 不传取到现在）
 
+### 5. 阿里云安全组动态白名单同步
+
+场景：阿里云 ECS 的安全组入方向规则按 IP 白名单放行指定端口。管理机从中心
+拉取 IP 列表，对账安全组规则，实现与 ufw 版相同的动态白名单。
+
+仓库内脚本 `aliyun_sg_sync.py`（Python SDK 版，不依赖 aliyun CLI）：
+
+- 调用 `GET /api/ips?format=text&server=<SERVER_NAME>&start=<DAYS天前>` 获取 IP 列表
+- 用阿里云 ECS Python SDK 对账 `SECURITY_GROUP_ID` 的入方向规则：
+  `authorize-security-group` 添加缺失规则（SourceCidrIp=ip/32）；
+  `revoke-security-group` 按规则ID删除过期规则（默认 PRUNE=1, 可配 PRUNE=0 只增不删）
+- 只操作 Description == `SG_COMMENT` 标记的规则，绝不触碰其他规则；
+  端口范围规则（如 25800/25810）不纳入管理，防止误删
+- 空 IP 列表直接退出，绝不在空列表下执行删除
+- `--dry-run` 只打印增删计划，不真改
+
+依赖与凭据：
+
+```bash
+pip install alibabacloud_ecs20140526 alibabacloud_tea_openapi alibabacloud_credentials
+```
+
+凭据读取顺序：配置文件 `ALIYUN_AK/ALIYUN_SK` → 环境变量
+`ALIBABA_CLOUD_ACCESS_KEY_ID/ALIBABA_CLOUD_ACCESS_KEY_SECRET`。
+RAM 权限需含：`ecs:DescribeSecurityGroupAttribute`、`ecs:AuthorizeSecurityGroup`、
+`ecs:RevokeSecurityGroup`。
+
+配置（user.ini，与 ufw 版共用文件）：
+
+| 变量             | 默认值                           | 说明                                    |
+|------------------|----------------------------------|-----------------------------------------|
+| ALIYUN_REGION    | cn-shenzhen                      | 安全组所属地域                          |
+| SECURITY_GROUP_ID| （必填）                          | 目标安全组ID                            |
+| SG_PROTOCOL      | TCP                              | 规则协议 TCP/UDP/ICMP/GRE/ALL           |
+| SG_COMMENT       | DYNAMIC_WHITELIST                | 规则描述标记，用于识别/管理这批规则     |
+| PRUNE            | 1                                | 1=同步删除过期规则, 0=只加不删           |
+| ALIYUN_AK/SK     | （留空走环境变量）                | 访问凭据                                |
+| PORTS            | 继承 ufw 配置的端口列表           | 需要放行的端口                          |
+
+用法：
+
+```bash
+cd /usr/local/src/ips
+python3 aliyun_sg_sync.py --dry-run          # 先预览增删计划
+python3 aliyun_sg_sync.py                    # 实际同步
+```
+
+定时同步（crontab）：
+
+```cron
+*/10 * * * * python3 /topath/aliyun_sg_sync.py >> /var/log/aliyun-sg-sync.log 2>&1
+```
+
+注意：
+- `SECURITY_GROUP_ID` 在 user.ini 里必须填真实安全组ID（示例文件用占位符）
+- RAM 用户建议单独授权这三个 ecs 动作 + 限定该安全组资源，不要给全量 ECS 权限
+
 ## API
 
 ### 中心 — 上传

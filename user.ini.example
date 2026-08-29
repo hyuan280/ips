@@ -10,6 +10,29 @@ DAYS=2
 # 需要放行的端口
 PORTS=(22 3389)
 
-# 规则注释，用于识别
+# 规则注释，用于识别 (ufw_sync-ip.sh 用)
 UFW_COMMENT="DYNAMIC_WHITELIST"
 
+# ---------- 阿里云安全组同步 (aliyun_sg_sync.py 用) ----------
+
+# 安全组所属地域
+ALIYUN_REGION="cn-shenzhen"
+
+# 目标安全组ID (必填)
+SECURITY_GROUP_ID="CHANGE_ME_SG_ID"
+
+# 规则协议 TCP/UDP/ICMP/GRE/ALL
+SG_PROTOCOL="TCP"
+
+# 规则描述标记, 用于识别本脚本创建的规则 (只增删带此标记的规则)
+SG_COMMENT="DYNAMIC_WHITELIST"
+
+# 1=同步删除过期规则, 0=只加不删
+PRUNE=1
+
+# 阿里云访问凭据 (留空则使用环境变量 ALIBABA_CLOUD_ACCESS_KEY_ID/SECRET)
+ALIYUN_AK="CHANGE_ME_ACCESS_KEY_ID"
+ALIYUN_SK="CHANGE_ME_ACCESS_KEY_SECRET"
+
+# 日志文件
+LOGFILE="/var/log/aliyun-sg-sync.log"

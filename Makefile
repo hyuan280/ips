@@ -38,8 +38,9 @@ RM      ?= rm -f
 
 IPS_SRC    := ips_server.py
 MYIP_SRC   := myip_server.py
+SG_SRC     := aliyun_sg_sync.py
 COMMON_SH  := update_ip.sh myip.sh new_token.sh
-ALL_SCRIPTS := $(IPS_SRC) $(MYIP_SRC) $(COMMON_SH)
+ALL_SCRIPTS := $(IPS_SRC) $(MYIP_SRC) $(SG_SRC) $(COMMON_SH)
 CLIENT_SCRIPTS := update_ip.sh myip.sh
 CLIENT_INI := client.ini.example
 UNITS      := ips.service myip.service
@@ -60,7 +61,7 @@ endef
 
 # ---------- 语法检查 ----------
 
-check: check-ips check-myip
+check: check-ips check-myip check-sg
 
 check-ips:
 	@$(PYTHON) -m py_compile $(IPS_SRC)
@@ -70,6 +71,10 @@ check-ips:
 check-myip:
 	@$(PYTHON) -m py_compile $(MYIP_SRC)
 	@echo "OK  myip 组件语法检查通过"
+
+check-sg:
+	@$(PYTHON) -m py_compile $(SG_SRC)
+	@echo "OK  aliyun_sg_sync 组件语法检查通过"
 
 # ---------- unit 生成 ----------
 
