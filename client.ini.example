@@ -1,0 +1,24 @@
+# ============================================================
+# client.ini — 客户端配置文件模板
+# 安装时若目标位置不存在会自动复制为 client.ini; 请填写真实值
+#
+# [client]
+# device      设备标识 (也可用命令行参数覆盖)
+# ips_url     统一中心地址 (POST /api/update)
+# token_file  中心 tokens.json 路径, 用于取本设备的上传 token
+# token_name  上述文件中本设备对应的名字
+#
+# [servers]
+# 每行一个外网服务器: 名字 = URL
+# 名字会作为上报记录的 server 字段; URL 为取公网IP的地址
+# ============================================================
+[client]
+device = nas
+ips_url = http://localhost:33121/api/update
+token_file = /etc/ips/tokens.json
+token_name = nas
+
+[servers]
+# 部署时替换为真实地址与 token
+# shenzhen-01 = http://YOUR_SERVER_IP:33122/api/myip/YOUR_TOKEN
+# beijing-01  = http://YOUR_SERVER_IP:33122/api/myip/YOUR_TOKEN

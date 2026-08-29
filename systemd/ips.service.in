@@ -1,0 +1,14 @@
+[Unit]
+Description=IP API Server (Unified Collector)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/bash -c 'exec -a ips.service /usr/bin/python3 @BINDIR@/ips_server.py --port @IPS_PORT@ --data-file @WORKDIR@/records.json --token-file @WORKDIR@/tokens.json --log-file /var/log/ips/api.log'
+Restart=always
+RestartSec=10
+WorkingDirectory=@WORKDIR@
+
+[Install]
+WantedBy=multi-user.target

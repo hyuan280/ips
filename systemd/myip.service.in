@@ -1,0 +1,14 @@
+[Unit]
+Description=Get My IP Service (外网服务器端)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/bash -c 'exec -a myip.service /usr/bin/python3 @BINDIR@/myip_server.py --port @MYIP_PORT@ --token-file @WORKDIR@/myip.token'
+Restart=always
+RestartSec=10
+WorkingDirectory=@WORKDIR@
+
+[Install]
+WantedBy=multi-user.target

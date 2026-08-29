@@ -1,0 +1,21 @@
+# Python 缓存
+__pycache__/
+*.py[cod]
+
+# 编辑器临时文件
+*.swp
+*.swo
+
+# 构建产物 (make units / make install 生成)
+build/
+
+# 本机覆盖文件, 不纳入版本管理
+Makefile.local
+
+# 客户端实际配置文件(安装时生成), 模板为 client.ini.example
+client.ini
+!client.ini.example
+
+# systemd unit 为生成产物, 仓库只留 systemd/*.service.in 模板
+*.service
+!systemd/*.service.in
