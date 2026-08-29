@@ -162,6 +162,48 @@ update_ip.sh my-laptop        # 覆盖 device 标识
 */10 * * * * /usr/local/bin/update_ip.sh >> /var/log/ips/client.log 2>&1
 ```
 
+### 4. 用户使用示例：ufw 动态白名单同步
+
+场景：中心记录了各内网设备的外网 IP。防火墙管理机从中心拉取 IP 列表，
+自动增删 ufw 放行规则，实现"IP 变了自动更新、消失的自动清理"的动态白名单。
+
+仓库内示例脚本 `ufw_sync-ip.sh`：
+
+- 调用 `GET /api/ips?format=text&server=<SERVER_NAME>&start=<DAYS天前>` 获取
+  指定外网服务器、最近 N 天内的去重 IP 列表（纯文本格式）
+- 与 ufw 中带注释 `DYNAMIC_WHITELIST` 的规则逐条对比：
+  期望存在但缺失的 → 添加放行；不再期望的 → 删除（按编号倒序删，避免错位）
+- 操作过程记录到 `/var/log/ufw-sync-ip.log`
+
+配置（脚本头部变量；可在同目录放一个 `user.ini` 覆盖，不污染示例本身）：
+
+| 变量         | 默认值                         | 说明                                    |
+|--------------|--------------------------------|-----------------------------------------|
+| IP_LIST_URL | http://localhost:33121/api/ips | 中心查询地址                            |
+| SERVER_NAME | you-server                     | 按哪个外网服务器过滤（与上报的 server 字段一致） |
+| DAYS         | 2                              | 取最近 N 天内的 IP                      |
+| PORTS        | (22 3389)                      | 需要放行的端口列表                      |
+| UFW_COMMENT  | DYNAMIC_WHITELIST              | 规则注释，用于识别/管理这批规则         |
+
+用法：
+
+```bash
+cd /usr/local/src/ips
+sudo ./ufw_sync-ip.sh               # root 权限操作 ufw
+```
+
+定时同步（crontab）：
+
+```cron
+*/10 * * * * sudo /topath/ufw_sync-ip.sh >> /var/log/ufw-sync-ip.log 2>&1
+```
+
+注意：
+- 需要 root 权限（ufw 操作），且先确认 ufw 已启用：`sudo ufw status`
+- `SERVER_NAME` 必须与设备上报时的服务器名一致（client.ini 中 `[servers]` 的名字）
+- 中心查询接口返回的是"该服务器最近一段时间看到过的 IP"，配合
+  `start`/`end` 参数即可限定时间窗口（脚本用 `start`=N 天前，`end` 不传取到现在）
+
 ## API
 
 ### 中心 — 上传

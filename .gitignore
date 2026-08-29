@@ -16,6 +16,10 @@ Makefile.local
 client.ini
 !client.ini.example
 
+# 使用者实际配置文件，模板为 client.ini.example
+user.ini
+!user.ini.example
+
 # systemd unit 为生成产物, 仓库只留 systemd/*.service.in 模板
 *.service
 !systemd/*.service.in

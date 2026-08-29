@@ -1,0 +1,15 @@
+# IPS 中心服务URL
+IP_LIST_URL="http://localhost:33121/api/ips"
+
+# 获取哪个服务器的IP列表
+SERVER_NAME="your-server"
+
+# 获取几天前的IP列表
+DAYS=2
+
+# 需要放行的端口
+PORTS=(22 3389)
+
+# 规则注释，用于识别
+UFW_COMMENT="DYNAMIC_WHITELIST"
+
